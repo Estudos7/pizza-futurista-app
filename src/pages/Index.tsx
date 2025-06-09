@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { usePizzaStore } from '../hooks/usePizzaStore';
+import { useSupabasePizzaStore } from '../hooks/useSupabasePizzaStore';
 import Header from '../components/Header';
 import Carousel from '../components/Carousel';
 import PizzaGrid from '../components/PizzaGrid';
@@ -13,7 +13,7 @@ import LoginModal from '../components/LoginModal';
 
 const Index = () => {
   const { toast } = useToast();
-  const store = usePizzaStore();
+  const store = useSupabasePizzaStore();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -42,19 +42,21 @@ const Index = () => {
     setIsCheckoutOpen(true);
   };
 
-  const handleConfirmOrder = (customerInfo: any, paymentMethod: string) => {
-    const orderId = store.createOrder(customerInfo, paymentMethod);
+  const handleConfirmOrder = async (customerInfo: any, paymentMethod: string) => {
+    const orderId = await store.createOrder(customerInfo, paymentMethod);
     setIsCheckoutOpen(false);
-    toast({
-      title: "Pedido confirmado!",
-      description: `Pedido #${orderId} realizado com sucesso. Enviando via WhatsApp...`,
-      duration: 5000,
-    });
+    if (orderId) {
+      toast({
+        title: "Pedido confirmado!",
+        description: `Pedido #${orderId} realizado com sucesso. Enviando via WhatsApp...`,
+        duration: 5000,
+      });
+    }
   };
 
-  const handleAdminLogin = (password: string) => {
-    if (password === 'gcipione') {
-      store.setIsAuthenticated(true);
+  const handleAdminLogin = async (password: string) => {
+    const isValid = await store.authenticate(password);
+    if (isValid) {
       setIsLoginOpen(false);
       setIsAdminOpen(true);
       toast({
@@ -69,6 +71,27 @@ const Index = () => {
       });
     }
   };
+
+  if (store.loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-neon-cyan mx-auto mb-4"></div>
+          <p className="text-white text-lg">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!store.pizzeriaInfo) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white text-lg">Erro ao carregar dados da pizzaria</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

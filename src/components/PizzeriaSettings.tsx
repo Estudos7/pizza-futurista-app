@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -10,20 +9,16 @@ interface PizzeriaSettingsProps {
 const PizzeriaSettings: React.FC<PizzeriaSettingsProps> = ({ store }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: store.pizzeriaInfo.name,
-    subtitle: store.pizzeriaInfo.subtitle,
-    logo: store.pizzeriaInfo.logo,
-    address: store.pizzeriaInfo.address,
-    phone: store.pizzeriaInfo.phone
+    name: store.pizzeriaInfo?.name || '',
+    subtitle: store.pizzeriaInfo?.subtitle || '',
+    logo: store.pizzeriaInfo?.logo || '',
+    address: store.pizzeriaInfo?.address || '',
+    phone: store.pizzeriaInfo?.phone || ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    store.updatePizzeriaInfo(formData);
-    toast({
-      title: "Configurações atualizadas!",
-      description: "As informações da pizzaria foram atualizadas com sucesso.",
-    });
+    await store.updatePizzeriaInfo(formData);
   };
 
   return (
@@ -114,7 +109,7 @@ const PizzeriaSettings: React.FC<PizzeriaSettingsProps> = ({ store }) => {
           </div>
         </form>
 
-        {store.pizzeriaInfo.address && store.pizzeriaInfo.phone && (
+        {store.pizzeriaInfo?.address && store.pizzeriaInfo?.phone && (
           <div className="mt-6 pt-6 border-t border-white/20">
             <h4 className="font-montserrat text-lg font-bold text-white mb-3">
               Informações de Contato

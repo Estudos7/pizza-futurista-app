@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import PizzaManagement from './PizzaManagement';
@@ -48,7 +47,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, store }) => {
                 : 'glass text-white hover:bg-white/20'
             }`}
           >
-            Pedidos ({store.orders.length})
+            Pedidos ({store.orders?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab('settings')}
