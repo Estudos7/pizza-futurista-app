@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Pizza, CartItem, Order } from '../types/pizza';
 
@@ -49,11 +48,20 @@ const initialPizzas: Pizza[] = [
   }
 ];
 
+const initialPizzeriaInfo = {
+  name: "PizzaFuturista",
+  subtitle: "A Pizzaria do Futuro",
+  logo: "",
+  address: "Rua Futurista, 123 - São Paulo, SP",
+  phone: "+5511940704836"
+};
+
 export const usePizzaStore = () => {
   const [pizzas, setPizzas] = useState<Pizza[]>(initialPizzas);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pizzeriaInfo, setPizzeriaInfo] = useState(initialPizzeriaInfo);
 
   const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large') => {
     const pizza = pizzas.find(p => p.id === pizzaId);
@@ -130,8 +138,39 @@ export const usePizzaStore = () => {
       status: 'pending'
     };
     setOrders([order, ...orders]);
+    
+    // Enviar pedido via WhatsApp
+    sendOrderToWhatsApp(order);
+    
     clearCart();
     return orderId;
+  };
+
+  const sendOrderToWhatsApp = (order: Order) => {
+    const items = order.items.map(item => 
+      `• ${item.name} (${getSizeLabel(item.size)}) - Qtd: ${item.quantity} - R$ ${(item.price * item.quantity).toFixed(2)}`
+    ).join('\n');
+
+    const message = `🍕 *NOVO PEDIDO - ${pizzeriaInfo.name}*\n\n` +
+      `📋 *Pedido:* ${order.id}\n` +
+      `👤 *Cliente:* ${order.customerInfo.name}\n` +
+      `📍 *Endereço:* ${order.customerInfo.address}\n` +
+      `📞 *Telefone:* ${order.customerInfo.phone}\n` +
+      `💳 *Pagamento:* ${order.paymentMethod}\n\n` +
+      `🍕 *Itens:*\n${items}\n\n` +
+      `💰 *Total:* R$ ${order.total.toFixed(2)}`;
+
+    const whatsappUrl = `https://wa.me/${pizzeriaInfo.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const getSizeLabel = (size: string) => {
+    switch (size) {
+      case 'small': return 'Broto';
+      case 'medium': return 'Média';
+      case 'large': return 'Grande';
+      default: return size;
+    }
   };
 
   const updateOrderStatus = (orderId: string, status: Order['status']) => {
@@ -140,11 +179,16 @@ export const usePizzaStore = () => {
     ));
   };
 
+  const updatePizzeriaInfo = (info: typeof initialPizzeriaInfo) => {
+    setPizzeriaInfo(info);
+  };
+
   return {
     pizzas,
     cart,
     orders,
     isAuthenticated,
+    pizzeriaInfo,
     setIsAuthenticated,
     addToCart,
     updateCartItem,
@@ -156,6 +200,7 @@ export const usePizzaStore = () => {
     updatePizza,
     deletePizza,
     createOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    updatePizzeriaInfo
   };
 };

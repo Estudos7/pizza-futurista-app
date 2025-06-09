@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import PizzaManagement from './PizzaManagement';
 import OrderManagement from './OrderManagement';
+import PizzeriaSettings from './PizzeriaSettings';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -11,7 +12,7 @@ interface AdminPanelProps {
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, store }) => {
-  const [activeTab, setActiveTab] = useState<'pizzas' | 'orders'>('pizzas');
+  const [activeTab, setActiveTab] = useState<'pizzas' | 'orders' | 'settings'>('pizzas');
 
   if (!isOpen) return null;
 
@@ -49,10 +50,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose, store }) => {
           >
             Pedidos ({store.orders.length})
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+              activeTab === 'settings'
+                ? 'gradient-primary text-white'
+                : 'glass text-white hover:bg-white/20'
+            }`}
+          >
+            Configurações
+          </button>
         </div>
 
         {activeTab === 'pizzas' && <PizzaManagement store={store} />}
         {activeTab === 'orders' && <OrderManagement store={store} />}
+        {activeTab === 'settings' && <PizzeriaSettings store={store} />}
       </div>
     </div>
   );

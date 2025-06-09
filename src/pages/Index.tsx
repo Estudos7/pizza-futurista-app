@@ -47,7 +47,7 @@ const Index = () => {
     setIsCheckoutOpen(false);
     toast({
       title: "Pedido confirmado!",
-      description: `Pedido #${orderId} realizado com sucesso. Total: R$ ${store.getCartTotal().toFixed(2)}`,
+      description: `Pedido #${orderId} realizado com sucesso. Enviando via WhatsApp...`,
       duration: 5000,
     });
   };
@@ -72,7 +72,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header pizzeriaInfo={store.pizzeriaInfo} />
       <Carousel />
       <PizzaGrid pizzas={store.pizzas} onAddToCart={handleAddToCart} />
       
