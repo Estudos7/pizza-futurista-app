@@ -62,6 +62,7 @@ export const usePizzaStore = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pizzeriaInfo, setPizzeriaInfo] = useState(initialPizzeriaInfo);
+  const [orderCounter, setOrderCounter] = useState(1);
 
   const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large') => {
     const pizza = pizzas.find(p => p.id === pizzaId);
@@ -127,7 +128,7 @@ export const usePizzaStore = () => {
   };
 
   const createOrder = (customerInfo: Order['customerInfo'], paymentMethod: string): string => {
-    const orderId = `ORDER-${Date.now()}`;
+    const orderId = orderCounter.toString();
     const order: Order = {
       id: orderId,
       items: [...cart],
@@ -138,6 +139,7 @@ export const usePizzaStore = () => {
       status: 'pending'
     };
     setOrders([order, ...orders]);
+    setOrderCounter(orderCounter + 1);
     
     // Enviar pedido via WhatsApp
     sendOrderToWhatsApp(order);
@@ -152,7 +154,7 @@ export const usePizzaStore = () => {
     ).join('\n');
 
     const message = `🍕 *NOVO PEDIDO - ${pizzeriaInfo.name}*\n\n` +
-      `📋 *Pedido:* ${order.id}\n` +
+      `📋 *Pedido:* #${order.id}\n` +
       `👤 *Cliente:* ${order.customerInfo.name}\n` +
       `📍 *Endereço:* ${order.customerInfo.address}\n` +
       `📞 *Telefone:* ${order.customerInfo.phone}\n` +
@@ -183,6 +185,29 @@ export const usePizzaStore = () => {
     setPizzeriaInfo(info);
   };
 
+  const getDayStats = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayOrders = orders.filter(order => {
+      const orderDate = new Date(order.timestamp);
+      orderDate.setHours(0, 0, 0, 0);
+      return orderDate.getTime() === today.getTime();
+    });
+
+    const totalOrders = todayOrders.length;
+    const totalPizzas = todayOrders.reduce((total, order) => 
+      total + order.items.reduce((orderTotal, item) => orderTotal + item.quantity, 0), 0
+    );
+    const totalValue = todayOrders.reduce((total, order) => total + order.total, 0);
+
+    return {
+      totalOrders,
+      totalPizzas,
+      totalValue
+    };
+  };
+
   return {
     pizzas,
     cart,
@@ -201,6 +226,7 @@ export const usePizzaStore = () => {
     deletePizza,
     createOrder,
     updateOrderStatus,
-    updatePizzeriaInfo
+    updatePizzeriaInfo,
+    getDayStats
   };
 };

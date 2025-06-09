@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Order } from '../types/pizza';
 
@@ -7,6 +6,8 @@ interface OrderManagementProps {
 }
 
 const OrderManagement: React.FC<OrderManagementProps> = ({ store }) => {
+  const dayStats = store.getDayStats();
+
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'pending': return 'text-yellow-400';
@@ -39,6 +40,25 @@ const OrderManagement: React.FC<OrderManagementProps> = ({ store }) => {
   return (
     <div className="space-y-6">
       <h2 className="font-montserrat text-2xl font-bold text-white">Pedidos Recentes</h2>
+      
+      {/* Resumo do Dia */}
+      <div className="glass-card p-6 rounded-xl">
+        <h3 className="font-montserrat text-xl font-bold text-white mb-4">Resumo do Dia</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-neon-cyan">{dayStats.totalOrders}</p>
+            <p className="text-muted-foreground">Total de Pedidos</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-neon-cyan">{dayStats.totalPizzas}</p>
+            <p className="text-muted-foreground">Total de Pizzas Vendidas</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-neon-cyan">R$ {dayStats.totalValue.toFixed(2)}</p>
+            <p className="text-muted-foreground">Valor Total do Dia</p>
+          </div>
+        </div>
+      </div>
       
       {store.orders.length === 0 ? (
         <div className="glass-card p-8 text-center rounded-xl">
