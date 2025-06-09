@@ -20,11 +20,12 @@ const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  const handleAddToCart = (pizzaId: number, size: 'small' | 'medium' | 'large') => {
-    store.addToCart(pizzaId, size);
+  const handleAddToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customIngredients?: string[]) => {
+    store.addToCart(pizzaId, size, customIngredients);
+    const isCustom = customIngredients && customIngredients.length > 0;
     toast({
-      title: "Adicionado ao carrinho!",
-      description: "Pizza adicionada com sucesso.",
+      title: isCustom ? "Pizza personalizada adicionada!" : "Adicionado ao carrinho!",
+      description: isCustom ? "Sua pizza personalizada foi adicionada com sucesso." : "Pizza adicionada com sucesso.",
       duration: 2000,
     });
   };

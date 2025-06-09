@@ -1,4 +1,3 @@
-
 export interface Pizza {
   id: number;
   name: string;
@@ -9,6 +8,7 @@ export interface Pizza {
     medium: number;
     large: number;
   };
+  availableIngredients?: string[];
 }
 
 export interface CartItem {
@@ -17,6 +17,8 @@ export interface CartItem {
   size: 'small' | 'medium' | 'large';
   price: number;
   quantity: number;
+  customIngredients?: string[];
+  isCustom?: boolean;
 }
 
 export interface Order {

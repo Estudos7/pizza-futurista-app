@@ -5,26 +5,44 @@ import { CartItem, Pizza } from '../types/pizza';
 export const useCart = (pizzas: Pizza[]) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large') => {
+  const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customIngredients?: string[]) => {
     const pizza = pizzas.find(p => p.id === pizzaId);
     if (!pizza) return;
 
-    const price = pizza.prices[size];
-    const existingItem = cart.find(item => item.pizzaId === pizzaId && item.size === size);
+    let price = pizza.prices[size];
+    
+    // Se tem ingredientes personalizados, usar preço da pizza mais cara
+    if (customIngredients && customIngredients.length > 0) {
+      const maxPrice = Math.max(...pizzas.map(p => p.prices[size]));
+      price = maxPrice;
+    }
+
+    const isCustom = customIngredients && customIngredients.length > 0;
+    const pizzaName = isCustom ? `${pizza.name} (Personalizada)` : pizza.name;
+
+    const existingItem = cart.find(item => 
+      item.pizzaId === pizzaId && 
+      item.size === size && 
+      JSON.stringify(item.customIngredients || []) === JSON.stringify(customIngredients || [])
+    );
 
     if (existingItem) {
       setCart(cart.map(item => 
-        item.pizzaId === pizzaId && item.size === size
+        item.pizzaId === pizzaId && 
+        item.size === size && 
+        JSON.stringify(item.customIngredients || []) === JSON.stringify(customIngredients || [])
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
     } else {
       setCart([...cart, {
         pizzaId,
-        name: pizza.name,
+        name: pizzaName,
         size,
         price,
-        quantity: 1
+        quantity: 1,
+        customIngredients: customIngredients || [],
+        isCustom
       }]);
     }
   };

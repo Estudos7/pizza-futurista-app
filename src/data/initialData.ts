@@ -11,7 +11,8 @@ export const initialPizzas: Pizza[] = [
       small: 25.00,
       medium: 35.00,
       large: 45.00
-    }
+    },
+    availableIngredients: ["Mussarela", "Manjericão", "Tomate", "Azeitona", "Orégano", "Pepperoni", "Cogumelos", "Pimentão", "Cebola", "Bacon", "Calabresa", "Queijo Parmesão"]
   },
   {
     id: 2,
@@ -22,7 +23,8 @@ export const initialPizzas: Pizza[] = [
       small: 30.00,
       medium: 40.00,
       large: 50.00
-    }
+    },
+    availableIngredients: ["Mussarela", "Pepperoni", "Azeitona", "Orégano", "Tomate", "Manjericão", "Cogumelos", "Pimentão", "Cebola", "Bacon", "Calabresa", "Queijo Parmesão"]
   },
   {
     id: 3,
@@ -33,7 +35,8 @@ export const initialPizzas: Pizza[] = [
       small: 35.00,
       medium: 45.00,
       large: 55.00
-    }
+    },
+    availableIngredients: ["Mussarela", "Gorgonzola", "Parmesão", "Provolone", "Manjericão", "Tomate", "Azeitona", "Orégano", "Pepperoni", "Cogumelos", "Pimentão", "Cebola"]
   },
   {
     id: 4,
@@ -44,7 +47,8 @@ export const initialPizzas: Pizza[] = [
       small: 28.00,
       medium: 38.00,
       large: 48.00
-    }
+    },
+    availableIngredients: ["Queijo Vegano", "Cogumelos", "Pimentão", "Azeitona", "Tomate", "Manjericão", "Orégano", "Cebola", "Milho", "Rúcula", "Abobrinha", "Berinjela"]
   }
 ];
 
