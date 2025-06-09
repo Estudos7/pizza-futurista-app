@@ -17,7 +17,7 @@ export interface CartItem {
   size: 'small' | 'medium' | 'large';
   price: number;
   quantity: number;
-  customIngredients?: string[];
+  customPizzas?: number[];
   isCustom?: boolean;
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { usePizzaStore } from '../hooks/usePizzaStore';
@@ -20,9 +19,9 @@ const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  const handleAddToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customIngredients?: string[]) => {
-    store.addToCart(pizzaId, size, customIngredients);
-    const isCustom = customIngredients && customIngredients.length > 0;
+  const handleAddToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customPizzas?: number[]) => {
+    store.addToCart(pizzaId, size, customPizzas);
+    const isCustom = customPizzas && customPizzas.length > 0;
     toast({
       title: isCustom ? "Pizza personalizada adicionada!" : "Adicionado ao carrinho!",
       description: isCustom ? "Sua pizza personalizada foi adicionada com sucesso." : "Pizza adicionada com sucesso.",

@@ -5,14 +5,13 @@ import CustomPizzaModal from './CustomPizzaModal';
 
 interface PizzaGridProps {
   pizzas: Pizza[];
-  onAddToCart: (pizzaId: number, size: 'small' | 'medium' | 'large', customIngredients?: string[]) => void;
+  onAddToCart: (pizzaId: number, size: 'small' | 'medium' | 'large', customPizzas?: number[]) => void;
 }
 
 const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
   const [selectedSizes, setSelectedSizes] = useState<{ [key: number]: 'small' | 'large' }>({});
-  const [customPizzaModal, setCustomPizzaModal] = useState<{ isOpen: boolean; pizza: Pizza | null }>({
-    isOpen: false,
-    pizza: null
+  const [customPizzaModal, setCustomPizzaModal] = useState<{ isOpen: boolean }>({
+    isOpen: false
   });
 
   const handleSizeSelect = (pizzaId: number, size: 'small' | 'large') => {
@@ -24,12 +23,13 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
     onAddToCart(pizzaId, selectedSize);
   };
 
-  const handleCustomPizza = (pizza: Pizza) => {
-    setCustomPizzaModal({ isOpen: true, pizza });
+  const handleCustomPizza = () => {
+    setCustomPizzaModal({ isOpen: true });
   };
 
-  const handleCustomAddToCart = (pizzaId: number, size: 'small' | 'large', customIngredients: string[]) => {
-    onAddToCart(pizzaId, size, customIngredients);
+  const handleCustomAddToCart = (pizzaIds: number[], size: 'small' | 'large') => {
+    // Use the first pizza as base and pass the selected pizzas as custom data
+    onAddToCart(pizzaIds[0], size, pizzaIds);
   };
 
   const getSizeLabel = (size: 'small' | 'large') => {
@@ -88,7 +88,7 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
                   </button>
                   
                   <button
-                    onClick={() => handleCustomPizza(pizza)}
+                    onClick={handleCustomPizza}
                     className="w-full glass py-2 px-4 rounded-lg text-white font-medium hover:bg-white/20 transition-all duration-300"
                   >
                     Monte sua Pizza
@@ -102,8 +102,8 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
 
       <CustomPizzaModal
         isOpen={customPizzaModal.isOpen}
-        onClose={() => setCustomPizzaModal({ isOpen: false, pizza: null })}
-        pizza={customPizzaModal.pizza!}
+        onClose={() => setCustomPizzaModal({ isOpen: false })}
+        pizzas={pizzas}
         onAddToCart={handleCustomAddToCart}
       />
     </>

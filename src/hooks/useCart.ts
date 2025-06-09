@@ -1,36 +1,42 @@
-
 import { useState } from 'react';
 import { CartItem, Pizza } from '../types/pizza';
 
 export const useCart = (pizzas: Pizza[]) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customIngredients?: string[]) => {
+  const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customPizzas?: number[]) => {
     const pizza = pizzas.find(p => p.id === pizzaId);
     if (!pizza) return;
 
     let price = pizza.prices[size];
+    let pizzaName = pizza.name;
     
-    // Se tem ingredientes personalizados, usar preço da pizza mais cara
-    if (customIngredients && customIngredients.length > 0) {
+    // Se tem pizzas personalizadas, usar preço da pizza mais cara
+    if (customPizzas && customPizzas.length > 0) {
       const maxPrice = Math.max(...pizzas.map(p => p.prices[size]));
       price = maxPrice;
+      
+      const selectedPizzaNames = customPizzas.map(id => {
+        const p = pizzas.find(pizza => pizza.id === id);
+        return p?.name || '';
+      }).filter(name => name);
+      
+      pizzaName = `Pizza Personalizada (${selectedPizzaNames.join(', ')})`;
     }
 
-    const isCustom = customIngredients && customIngredients.length > 0;
-    const pizzaName = isCustom ? `${pizza.name} (Personalizada)` : pizza.name;
+    const isCustom = customPizzas && customPizzas.length > 0;
 
     const existingItem = cart.find(item => 
       item.pizzaId === pizzaId && 
       item.size === size && 
-      JSON.stringify(item.customIngredients || []) === JSON.stringify(customIngredients || [])
+      JSON.stringify(item.customPizzas || []) === JSON.stringify(customPizzas || [])
     );
 
     if (existingItem) {
       setCart(cart.map(item => 
         item.pizzaId === pizzaId && 
         item.size === size && 
-        JSON.stringify(item.customIngredients || []) === JSON.stringify(customIngredients || [])
+        JSON.stringify(item.customPizzas || []) === JSON.stringify(customPizzas || [])
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
@@ -41,7 +47,7 @@ export const useCart = (pizzas: Pizza[]) => {
         size,
         price,
         quantity: 1,
-        customIngredients: customIngredients || [],
+        customPizzas: customPizzas || [],
         isCustom
       }]);
     }
