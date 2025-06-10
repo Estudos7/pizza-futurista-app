@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useToast } from './use-toast';
@@ -46,22 +47,22 @@ export const useSupabasePizzaStore = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('pizzerias')
         .select('*')
         .limit(1)
         .single();
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      if (data) {
+      if (result.data) {
         setPizzeriaInfo({
-          id: data.id,
-          name: data.name,
-          subtitle: data.subtitle,
-          logo: data.logo || '',
-          address: data.address,
-          phone: data.phone
+          id: result.data.id,
+          name: result.data.name,
+          subtitle: result.data.subtitle,
+          logo: result.data.logo || '',
+          address: result.data.address,
+          phone: result.data.phone
         });
       }
     } catch (error) {
@@ -84,21 +85,22 @@ export const useSupabasePizzaStore = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('pizzas')
         .select('*')
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      if (data) {
-        const formattedPizzas: Pizza[] = data.map(pizza => ({
+      if (result.data) {
+        const formattedPizzas: Pizza[] = result.data.map(pizza => ({
           id: parseInt(pizza.id.split('-')[0], 16), // Convert UUID to number for compatibility
           name: pizza.name,
           description: pizza.description,
           image: pizza.image,
           prices: {
             small: pizza.price_small,
+            medium: pizza.price_medium,
             large: pizza.price_large
           },
           availableIngredients: pizza.available_ingredients || []
@@ -119,15 +121,15 @@ export const useSupabasePizzaStore = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      if (data) {
-        const formattedOrders: Order[] = data.map(order => ({
+      if (result.data) {
+        const formattedOrders: Order[] = result.data.map(order => ({
           id: order.order_number,
           items: order.items,
           customerInfo: {
@@ -143,7 +145,7 @@ export const useSupabasePizzaStore = () => {
         setOrders(formattedOrders);
         
         // Update order counter based on existing orders
-        const maxOrderNumber = Math.max(...data.map(o => parseInt(o.order_number) || 0), 0);
+        const maxOrderNumber = Math.max(...result.data.map(o => parseInt(o.order_number) || 0), 0);
         setOrderCounter(maxOrderNumber + 1);
       }
     } catch (error) {
@@ -168,7 +170,7 @@ export const useSupabasePizzaStore = () => {
     if (!pizzeriaInfo) return;
 
     try {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('pizzas')
         .insert({
           pizzeria_id: pizzeriaInfo.id,
@@ -176,14 +178,14 @@ export const useSupabasePizzaStore = () => {
           description: pizza.description,
           image: pizza.image,
           price_small: pizza.prices.small,
-          price_medium: 0, // Not used anymore
+          price_medium: pizza.prices.medium,
           price_large: pizza.prices.large,
           available_ingredients: pizza.availableIngredients || []
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       await loadPizzas(); // Reload pizzas
       toast({
@@ -216,29 +218,29 @@ export const useSupabasePizzaStore = () => {
       const existingPizza = pizzas.find(p => p.id === id);
       if (!existingPizza) return;
 
-      const { data: pizzaData } = await supabase
+      const pizzaResult = await supabase
         .from('pizzas')
         .select('id')
         .eq('name', existingPizza.name)
         .single();
 
-      if (!pizzaData) return;
+      if (!pizzaResult.data) return;
 
-      const { error } = await supabase
+      const result = await supabase
         .from('pizzas')
         .update({
           name: pizza.name,
           description: pizza.description,
           image: pizza.image,
           price_small: pizza.prices.small,
-          price_medium: 0, // Not used anymore
+          price_medium: pizza.prices.medium,
           price_large: pizza.prices.large,
           available_ingredients: pizza.availableIngredients || [],
           updated_at: new Date().toISOString()
         })
-        .eq('id', pizzaData.id);
+        .eq('id', pizzaResult.data.id);
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       await loadPizzas(); // Reload pizzas
       toast({
@@ -271,20 +273,20 @@ export const useSupabasePizzaStore = () => {
       const existingPizza = pizzas.find(p => p.id === id);
       if (!existingPizza) return;
 
-      const { data: pizzaData } = await supabase
+      const pizzaResult = await supabase
         .from('pizzas')
         .select('id')
         .eq('name', existingPizza.name)
         .single();
 
-      if (!pizzaData) return;
+      if (!pizzaResult.data) return;
 
-      const { error } = await supabase
+      const result = await supabase
         .from('pizzas')
         .delete()
-        .eq('id', pizzaData.id);
+        .eq('id', pizzaResult.data.id);
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       await loadPizzas(); // Reload pizzas
       toast({
@@ -421,7 +423,7 @@ export const useSupabasePizzaStore = () => {
     if (!pizzeriaInfo) return '';
 
     try {
-      const { error } = await supabase
+      const result = await supabase
         .from('orders')
         .insert({
           pizzeria_id: pizzeriaInfo.id,
@@ -435,7 +437,7 @@ export const useSupabasePizzaStore = () => {
           items: cart
         });
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       setOrderCounter(orderCounter + 1);
       clearCart();
@@ -484,7 +486,7 @@ export const useSupabasePizzaStore = () => {
     }
 
     try {
-      const { error } = await supabase
+      const result = await supabase
         .from('orders')
         .update({ 
           status: status,
@@ -492,7 +494,7 @@ export const useSupabasePizzaStore = () => {
         })
         .eq('order_number', orderId);
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       await loadOrders(); // Reload orders
       toast({
@@ -524,7 +526,7 @@ export const useSupabasePizzaStore = () => {
     if (!pizzeriaInfo) return;
 
     try {
-      const { error } = await supabase
+      const result = await supabase
         .from('pizzerias')
         .update({
           name: info.name,
@@ -536,7 +538,7 @@ export const useSupabasePizzaStore = () => {
         })
         .eq('id', pizzeriaInfo.id);
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       setPizzeriaInfo({ ...pizzeriaInfo, ...info });
       toast({
@@ -557,7 +559,7 @@ export const useSupabasePizzaStore = () => {
   const authenticate = async (password: string): Promise<boolean> => {
     if (!isSupabaseConfigured) {
       // Local mode - simple password check
-      const isValid = password === "admin";
+      const isValid = password === "gcipione";
       setIsAuthenticated(isValid);
       return isValid;
     }
@@ -565,20 +567,51 @@ export const useSupabasePizzaStore = () => {
     if (!pizzeriaInfo) return false;
 
     try {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('pizzerias')
         .select('admin_password')
         .eq('id', pizzeriaInfo.id)
         .single();
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      const isValid = data.admin_password === password;
+      const isValid = result.data.admin_password === password;
       setIsAuthenticated(isValid);
       return isValid;
     } catch (error) {
       console.error('Error authenticating:', error);
       return false;
+    }
+  };
+
+  // Password recovery
+  const recoverPassword = async (recoveryKey: string): Promise<string | null> => {
+    const validRecoveryKey = "PIZZA2024";
+    
+    if (recoveryKey !== validRecoveryKey) {
+      return null;
+    }
+
+    if (!isSupabaseConfigured) {
+      // Local mode - return default password
+      return "gcipione";
+    }
+
+    if (!pizzeriaInfo) return null;
+
+    try {
+      const result = await supabase
+        .from('pizzerias')
+        .select('admin_password')
+        .eq('id', pizzeriaInfo.id)
+        .single();
+
+      if (result.error) throw result.error;
+
+      return result.data.admin_password;
+    } catch (error) {
+      console.error('Error recovering password:', error);
+      return null;
     }
   };
 
@@ -638,6 +671,7 @@ export const useSupabasePizzaStore = () => {
     updateOrderStatus,
     updatePizzeriaInfo,
     authenticate,
+    recoverPassword,
     getDayStats
   };
 };

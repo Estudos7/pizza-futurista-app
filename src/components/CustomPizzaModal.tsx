@@ -7,7 +7,7 @@ interface CustomPizzaModalProps {
   isOpen: boolean;
   onClose: () => void;
   pizzas: Pizza[];
-  onAddToCart: (pizzaIds: number[], size: 'small' | 'large') => void;
+  onAddToCart: (pizzaIds: number[], size: 'large') => void;
 }
 
 const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
@@ -16,8 +16,8 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
   pizzas,
   onAddToCart
 }) => {
-  const [selectedSize, setSelectedSize] = useState<'small' | 'large'>('small');
   const [selectedPizzas, setSelectedPizzas] = useState<number[]>([]);
+  const size = 'large'; // Sempre tamanho grande
 
   if (!isOpen) return null;
 
@@ -31,18 +31,14 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
 
   const handleAddToCart = () => {
     if (selectedPizzas.length > 0) {
-      onAddToCart(selectedPizzas, selectedSize);
+      onAddToCart(selectedPizzas, size);
       setSelectedPizzas([]);
       onClose();
     }
   };
 
-  const getSizeLabel = (size: 'small' | 'large') => {
-    return size === 'small' ? 'Broto' : 'Grande';
-  };
-
   const getCurrentPrice = () => {
-    const maxPrice = Math.max(...pizzas.map(p => p.prices[selectedSize]));
+    const maxPrice = Math.max(...pizzas.map(p => p.prices[size]));
     return maxPrice;
   };
 
@@ -71,23 +67,12 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
 
           <div className="space-y-6">
             <div>
-              <h4 className="font-semibold text-white mb-3">Escolha o tamanho:</h4>
-              <div className="flex gap-2">
-                {(['small', 'large'] as const).map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                      selectedSize === size
-                        ? 'gradient-primary text-white shadow-lg'
-                        : 'glass text-white hover:bg-white/20'
-                    }`}
-                  >
-                    {getSizeLabel(size)}
-                    <br />
-                    <span className="text-neon-cyan">R$ {getCurrentPrice().toFixed(2)}</span>
-                  </button>
-                ))}
+              <h4 className="font-semibold text-white mb-3">Tamanho: Grande</h4>
+              <div className="glass p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-white font-medium">Pizza Grande</span>
+                  <span className="text-neon-cyan font-bold text-lg">R$ {getCurrentPrice().toFixed(2)}</span>
+                </div>
               </div>
             </div>
 

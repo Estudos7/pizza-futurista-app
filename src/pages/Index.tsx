@@ -72,6 +72,23 @@ const Index = () => {
     }
   };
 
+  const handlePasswordRecovery = async (recoveryKey: string): Promise<string | null> => {
+    const password = await store.recoverPassword(recoveryKey);
+    if (password) {
+      toast({
+        title: "Senha recuperada!",
+        description: "Use a senha exibida para fazer login.",
+      });
+    } else {
+      toast({
+        title: "Chave inválida",
+        description: "Verifique a chave de recuperação e tente novamente.",
+        variant: "destructive",
+      });
+    }
+    return password;
+  };
+
   if (store.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -127,6 +144,7 @@ const Index = () => {
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
         onLogin={handleAdminLogin}
+        onRecover={handlePasswordRecovery}
       />
       
       {store.isAuthenticated && (
