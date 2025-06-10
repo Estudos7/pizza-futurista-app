@@ -7,36 +7,40 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Mock client for development when Supabase is not configured
 const createMockClient = () => ({
   from: (table: string) => {
+    const createMockPromise = (data: any = null, error: any = null) => {
+      return Promise.resolve({ data, error });
+    };
+
     const mockQuery = {
       select: (columns?: string) => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: [], error: null })
+        then: (resolve: any) => createMockPromise([]).then(resolve)
       }),
       insert: (data: any) => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: null, error: null })
+        then: (resolve: any) => createMockPromise(null).then(resolve)
       }),
       update: (data: any) => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: null, error: null })
+        then: (resolve: any) => createMockPromise(null).then(resolve)
       }),
       delete: () => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: null, error: null })
+        then: (resolve: any) => createMockPromise(null).then(resolve)
       }),
       eq: (column: string, value: any) => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: null, error: null })
+        then: (resolve: any) => createMockPromise(null).then(resolve)
       }),
       limit: (count: number) => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: [], error: null })
+        then: (resolve: any) => createMockPromise([]).then(resolve)
       }),
       order: (column: string, options?: any) => ({
         ...mockQuery,
-        then: (resolve: any) => resolve({ data: [], error: null })
+        then: (resolve: any) => createMockPromise([]).then(resolve)
       }),
-      single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+      single: () => createMockPromise(null, new Error('Supabase not configured'))
     };
     
     return mockQuery;
