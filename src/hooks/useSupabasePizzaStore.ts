@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useToast } from './use-toast';
 import { Pizza, CartItem, Order } from '../types/pizza';
+import { initialPizzas, initialPizzeriaInfo } from '../data/initialData';
 
 interface PizzeriaInfo {
   id: string;
@@ -24,9 +25,17 @@ export const useSupabasePizzaStore = () => {
 
   // Load initial data
   useEffect(() => {
-    loadPizzeriaData();
-    loadPizzas();
-    loadOrders();
+    if (isSupabaseConfigured) {
+      loadPizzeriaData();
+      loadPizzas();
+      loadOrders();
+    } else {
+      // Use local data when Supabase is not configured
+      setPizzeriaInfo(initialPizzeriaInfo);
+      setPizzas(initialPizzas);
+      setOrders([]);
+      setLoading(false);
+    }
   }, []);
 
   const loadPizzeriaData = async () => {
@@ -51,10 +60,11 @@ export const useSupabasePizzaStore = () => {
       }
     } catch (error) {
       console.error('Error loading pizzeria data:', error);
+      // Fallback to local data
+      setPizzeriaInfo(initialPizzeriaInfo);
       toast({
-        title: "Erro",
-        description: "Erro ao carregar dados da pizzaria",
-        variant: "destructive",
+        title: "Modo Local",
+        description: "Usando dados locais. Configure o Supabase para persistência.",
       });
     } finally {
       setLoading(false);
@@ -78,7 +88,6 @@ export const useSupabasePizzaStore = () => {
           image: pizza.image,
           prices: {
             small: pizza.price_small,
-            medium: pizza.price_medium,
             large: pizza.price_large
           },
           availableIngredients: pizza.available_ingredients || []
@@ -87,11 +96,8 @@ export const useSupabasePizzaStore = () => {
       }
     } catch (error) {
       console.error('Error loading pizzas:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar pizzas",
-        variant: "destructive",
-      });
+      // Fallback to local data
+      setPizzas(initialPizzas);
     }
   };
 
@@ -126,16 +132,23 @@ export const useSupabasePizzaStore = () => {
       }
     } catch (error) {
       console.error('Error loading orders:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar pedidos",
-        variant: "destructive",
-      });
+      setOrders([]);
     }
   };
 
   // Pizza management
   const addPizza = async (pizza: Omit<Pizza, 'id'>) => {
+    if (!isSupabaseConfigured) {
+      // Local mode - add to state
+      const newPizza = { ...pizza, id: Date.now() };
+      setPizzas(prev => [...prev, newPizza]);
+      toast({
+        title: "Sucesso",
+        description: "Pizza adicionada localmente!",
+      });
+      return;
+    }
+
     if (!pizzeriaInfo) return;
 
     try {
@@ -147,7 +160,7 @@ export const useSupabasePizzaStore = () => {
           description: pizza.description,
           image: pizza.image,
           price_small: pizza.prices.small,
-          price_medium: pizza.prices.medium,
+          price_medium: 0, // Not used anymore
           price_large: pizza.prices.large,
           available_ingredients: pizza.availableIngredients || []
         })
@@ -172,6 +185,16 @@ export const useSupabasePizzaStore = () => {
   };
 
   const updatePizza = async (id: number, pizza: Omit<Pizza, 'id'>) => {
+    if (!isSupabaseConfigured) {
+      // Local mode - update state
+      setPizzas(prev => prev.map(p => p.id === id ? { ...pizza, id } : p));
+      toast({
+        title: "Sucesso",
+        description: "Pizza atualizada localmente!",
+      });
+      return;
+    }
+
     try {
       // Find the pizza by the legacy ID
       const existingPizza = pizzas.find(p => p.id === id);
@@ -192,7 +215,7 @@ export const useSupabasePizzaStore = () => {
           description: pizza.description,
           image: pizza.image,
           price_small: pizza.prices.small,
-          price_medium: pizza.prices.medium,
+          price_medium: 0, // Not used anymore
           price_large: pizza.prices.large,
           available_ingredients: pizza.availableIngredients || [],
           updated_at: new Date().toISOString()
@@ -217,6 +240,16 @@ export const useSupabasePizzaStore = () => {
   };
 
   const deletePizza = async (id: number) => {
+    if (!isSupabaseConfigured) {
+      // Local mode - remove from state
+      setPizzas(prev => prev.filter(p => p.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Pizza removida localmente!",
+      });
+      return;
+    }
+
     try {
       // Find the pizza by the legacy ID
       const existingPizza = pizzas.find(p => p.id === id);
@@ -253,7 +286,7 @@ export const useSupabasePizzaStore = () => {
   };
 
   // Cart management
-  const addToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customPizzas?: number[]) => {
+  const addToCart = (pizzaId: number, size: 'small' | 'large', customPizzas?: number[]) => {
     const pizza = pizzas.find(p => p.id === pizzaId);
     if (!pizza) return;
 
@@ -329,12 +362,49 @@ export const useSupabasePizzaStore = () => {
 
   // Order management
   const createOrder = async (customerInfo: Order['customerInfo'], paymentMethod: string): Promise<string> => {
+    const orderId = orderCounter.toString();
+    const total = getCartTotal();
+
+    if (!isSupabaseConfigured) {
+      // Local mode - add to state
+      const newOrder: Order = {
+        id: orderId,
+        items: [...cart],
+        customerInfo,
+        paymentMethod,
+        total,
+        timestamp: new Date(),
+        status: 'pending'
+      };
+      setOrders(prev => [newOrder, ...prev]);
+      setOrderCounter(orderCounter + 1);
+      clearCart();
+      
+      // Send to WhatsApp
+      if (pizzeriaInfo) {
+        const items = cart.map(item => 
+          `• ${item.name} (${getSizeLabel(item.size)}) - Qtd: ${item.quantity} - R$ ${(item.price * item.quantity).toFixed(2)}`
+        ).join('\n');
+
+        const message = `🍕 *NOVO PEDIDO - ${pizzeriaInfo.name}*\n\n` +
+          `📋 *Pedido:* #${orderId}\n` +
+          `👤 *Cliente:* ${customerInfo.name}\n` +
+          `📍 *Endereço:* ${customerInfo.address}\n` +
+          `📞 *Telefone:* ${customerInfo.phone}\n` +
+          `💳 *Pagamento:* ${paymentMethod}\n\n` +
+          `🍕 *Itens:*\n${items}\n\n` +
+          `💰 *Total:* R$ ${total.toFixed(2)}`;
+
+        const whatsappUrl = `https://wa.me/${pizzeriaInfo.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      }
+      
+      return orderId;
+    }
+
     if (!pizzeriaInfo) return '';
 
     try {
-      const orderId = orderCounter.toString();
-      const total = getCartTotal();
-
       const { error } = await supabase
         .from('orders')
         .insert({
@@ -385,6 +455,18 @@ export const useSupabasePizzaStore = () => {
   };
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+    if (!isSupabaseConfigured) {
+      // Local mode - update state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status } : order
+      ));
+      toast({
+        title: "Sucesso",
+        description: "Status do pedido atualizado localmente!",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('orders')
@@ -413,6 +495,16 @@ export const useSupabasePizzaStore = () => {
 
   // Pizzeria settings
   const updatePizzeriaInfo = async (info: Omit<PizzeriaInfo, 'id'>) => {
+    if (!isSupabaseConfigured) {
+      // Local mode - update state
+      setPizzeriaInfo(prev => prev ? { ...prev, ...info } : null);
+      toast({
+        title: "Sucesso",
+        description: "Informações atualizadas localmente!",
+      });
+      return;
+    }
+
     if (!pizzeriaInfo) return;
 
     try {
@@ -447,6 +539,13 @@ export const useSupabasePizzaStore = () => {
 
   // Authentication
   const authenticate = async (password: string): Promise<boolean> => {
+    if (!isSupabaseConfigured) {
+      // Local mode - simple password check
+      const isValid = password === "admin";
+      setIsAuthenticated(isValid);
+      return isValid;
+    }
+
     if (!pizzeriaInfo) return false;
 
     try {
@@ -471,7 +570,6 @@ export const useSupabasePizzaStore = () => {
   const getSizeLabel = (size: string) => {
     switch (size) {
       case 'small': return 'Broto';
-      case 'medium': return 'Média';
       case 'large': return 'Grande';
       default: return size;
     }
