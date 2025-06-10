@@ -31,7 +31,7 @@ export const useSupabasePizzaStore = () => {
       loadOrders();
     } else {
       // Use local data when Supabase is not configured
-      setPizzeriaInfo(initialPizzeriaInfo);
+      setPizzeriaInfo({ ...initialPizzeriaInfo, id: 'local-pizzeria' });
       setPizzas(initialPizzas);
       setOrders([]);
       setLoading(false);
@@ -40,6 +40,12 @@ export const useSupabasePizzaStore = () => {
 
   const loadPizzeriaData = async () => {
     try {
+      if (!isSupabaseConfigured) {
+        setPizzeriaInfo({ ...initialPizzeriaInfo, id: 'local-pizzeria' });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('pizzerias')
         .select('*')
@@ -61,7 +67,7 @@ export const useSupabasePizzaStore = () => {
     } catch (error) {
       console.error('Error loading pizzeria data:', error);
       // Fallback to local data
-      setPizzeriaInfo(initialPizzeriaInfo);
+      setPizzeriaInfo({ ...initialPizzeriaInfo, id: 'local-pizzeria' });
       toast({
         title: "Modo Local",
         description: "Usando dados locais. Configure o Supabase para persistência.",
@@ -73,6 +79,11 @@ export const useSupabasePizzaStore = () => {
 
   const loadPizzas = async () => {
     try {
+      if (!isSupabaseConfigured) {
+        setPizzas(initialPizzas);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('pizzas')
         .select('*')
@@ -103,6 +114,11 @@ export const useSupabasePizzaStore = () => {
 
   const loadOrders = async () => {
     try {
+      if (!isSupabaseConfigured) {
+        setOrders([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('orders')
         .select('*')

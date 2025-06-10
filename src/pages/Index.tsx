@@ -19,7 +19,7 @@ const Index = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  const handleAddToCart = (pizzaId: number, size: 'small' | 'medium' | 'large', customPizzas?: number[]) => {
+  const handleAddToCart = (pizzaId: number, size: 'small' | 'large', customPizzas?: number[]) => {
     store.addToCart(pizzaId, size, customPizzas);
     const isCustom = customPizzas && customPizzas.length > 0;
     toast({

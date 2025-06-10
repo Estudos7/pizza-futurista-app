@@ -6,16 +6,29 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Mock client for development when Supabase is not configured
 const createMockClient = () => ({
-  from: () => ({
-    select: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-    insert: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-    update: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-    delete: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-    eq: () => ({ single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }) }),
-    limit: () => ({ single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }) }),
-    order: () => Promise.resolve({ data: [], error: null }),
-    single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
-  })
+  from: (table: string) => {
+    const mockQuery = {
+      select: (columns?: string) => mockQuery,
+      insert: (data: any) => mockQuery,
+      update: (data: any) => mockQuery,
+      delete: () => mockQuery,
+      eq: (column: string, value: any) => mockQuery,
+      limit: (count: number) => mockQuery,
+      order: (column: string, options?: any) => mockQuery,
+      single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+    };
+    
+    // For select operations, return empty array or null based on expected usage
+    mockQuery.select = (columns?: string) => {
+      const finalQuery = { ...mockQuery };
+      // Return a promise that resolves to empty data for most operations
+      Object.setPrototypeOf(finalQuery, Promise.prototype);
+      (finalQuery as any).then = (resolve: any) => resolve({ data: [], error: null });
+      return finalQuery;
+    };
+    
+    return mockQuery;
+  }
 });
 
 export const supabase = supabaseUrl && supabaseAnonKey 
