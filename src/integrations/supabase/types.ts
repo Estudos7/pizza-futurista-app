@@ -9,137 +9,138 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      carousel_images: {
+      customers: {
         Row: {
-          created_at: string
+          address: string | null
+          created_at: string | null
           id: string
-          image_url: string
-          title: string | null
-          updated_at: string
+          last_order_at: string | null
+          name: string
+          phone: string
+          total_orders: number | null
+          total_spent: number | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          address?: string | null
+          created_at?: string | null
           id?: string
-          image_url: string
-          title?: string | null
-          updated_at?: string
+          last_order_at?: string | null
+          name: string
+          phone: string
+          total_orders?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          address?: string | null
+          created_at?: string | null
           id?: string
-          image_url?: string
-          title?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      company_info: {
-        Row: {
-          created_at: string
-          id: string
-          logo_url: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          logo_url: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          logo_url?: string
+          last_order_at?: string | null
           name?: string
-          updated_at?: string
+          phone?: string
+          total_orders?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
-      customer_promotions: {
+      ingredients: {
         Row: {
-          created_at: string
-          customer_id: string
+          created_at: string | null
           id: string
-          message: string | null
-          product_id: string
-          sent_at: string
-          updated_at: string
+          is_active: boolean | null
+          name: string
+          price_addition: number | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          customer_id: string
+          created_at?: string | null
           id?: string
-          message?: string | null
-          product_id: string
-          sent_at?: string
-          updated_at?: string
+          is_active?: boolean | null
+          name: string
+          price_addition?: number | null
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
-          customer_id?: string
+          created_at?: string | null
           id?: string
-          message?: string | null
-          product_id?: string
-          sent_at?: string
-          updated_at?: string
+          is_active?: boolean | null
+          name?: string
+          price_addition?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string | null
+          custom_ingredients: Json | null
+          id: string
+          is_custom: boolean | null
+          order_id: string | null
+          pizza_id: string | null
+          pizza_name: string
+          quantity: number
+          size: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          custom_ingredients?: Json | null
+          id?: string
+          is_custom?: boolean | null
+          order_id?: string | null
+          pizza_id?: string | null
+          pizza_name: string
+          quantity?: number
+          size: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          custom_ingredients?: Json | null
+          id?: string
+          is_custom?: boolean | null
+          order_id?: string | null
+          pizza_id?: string | null
+          pizza_name?: string
+          quantity?: number
+          size?: string
+          total_price?: number
+          unit_price?: number
         }
         Relationships: [
           {
-            foreignKeyName: "customer_promotions_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "customer_promotions_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "order_items_pizza_id_fkey"
+            columns: ["pizza_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "pizzas"
             referencedColumns: ["id"]
           },
         ]
-      }
-      customers: {
-        Row: {
-          created_at: string
-          id: string
-          last_promotion: string | null
-          name: string
-          phone: string
-          received_promotions: boolean
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          last_promotion?: string | null
-          name: string
-          phone: string
-          received_promotions?: boolean
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          last_promotion?: string | null
-          name?: string
-          phone?: string
-          received_promotions?: boolean
-          updated_at?: string
-        }
-        Relationships: []
       }
       orders: {
         Row: {
           created_at: string | null
           customer_address: string
+          customer_id: string | null
           customer_name: string
           customer_phone: string
+          delivery_fee: number | null
+          estimated_delivery_time: string | null
           id: string
           items: Json
+          notes: string | null
           order_number: string
           payment_method: string
           pizzeria_id: string | null
@@ -150,10 +151,14 @@ export type Database = {
         Insert: {
           created_at?: string | null
           customer_address: string
+          customer_id?: string | null
           customer_name: string
           customer_phone: string
+          delivery_fee?: number | null
+          estimated_delivery_time?: string | null
           id?: string
           items: Json
+          notes?: string | null
           order_number: string
           payment_method: string
           pizzeria_id?: string | null
@@ -164,10 +169,14 @@ export type Database = {
         Update: {
           created_at?: string | null
           customer_address?: string
+          customer_id?: string | null
           customer_name?: string
           customer_phone?: string
+          delivery_fee?: number | null
+          estimated_delivery_time?: string | null
           id?: string
           items?: Json
+          notes?: string | null
           order_number?: string
           payment_method?: string
           pizzeria_id?: string | null
@@ -177,10 +186,53 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_pizzeria_id_fkey"
             columns: ["pizzeria_id"]
             isOneToOne: false
             referencedRelation: "pizzerias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pizza_ingredients: {
+        Row: {
+          id: string
+          ingredient_id: string | null
+          is_included: boolean | null
+          pizza_id: string | null
+        }
+        Insert: {
+          id?: string
+          ingredient_id?: string | null
+          is_included?: boolean | null
+          pizza_id?: string | null
+        }
+        Update: {
+          id?: string
+          ingredient_id?: string | null
+          is_included?: boolean | null
+          pizza_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pizza_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pizza_ingredients_pizza_id_fkey"
+            columns: ["pizza_id"]
+            isOneToOne: false
+            referencedRelation: "pizzas"
             referencedColumns: ["id"]
           },
         ]
@@ -192,6 +244,7 @@ export type Database = {
           description: string
           id: string
           image: string
+          is_active: boolean | null
           name: string
           pizzeria_id: string | null
           price_large: number
@@ -205,6 +258,7 @@ export type Database = {
           description: string
           id?: string
           image: string
+          is_active?: boolean | null
           name: string
           pizzeria_id?: string | null
           price_large: number
@@ -218,6 +272,7 @@ export type Database = {
           description?: string
           id?: string
           image?: string
+          is_active?: boolean | null
           name?: string
           pizzeria_id?: string | null
           price_large?: number
@@ -268,39 +323,6 @@ export type Database = {
           phone?: string
           subtitle?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      products: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string
-          name: string
-          regular_price: number
-          sale_price: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url: string
-          name: string
-          regular_price: number
-          sale_price: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string
-          name?: string
-          regular_price?: number
-          sale_price?: number
-          updated_at?: string
         }
         Relationships: []
       }

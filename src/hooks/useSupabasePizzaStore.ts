@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { Pizza, CartItem, Order } from '../types/pizza';
 import { initialPizzas, initialPizzeriaInfo } from '../data/initialData';
@@ -26,43 +25,29 @@ export const useSupabasePizzaStore = () => {
 
   // Load initial data
   useEffect(() => {
-    if (isSupabaseConfigured) {
-      loadPizzeriaData();
-      loadPizzas();
-      loadOrders();
-    } else {
-      // Use local data when Supabase is not configured
-      setPizzeriaInfo({ ...initialPizzeriaInfo, id: 'local-pizzeria' });
-      setPizzas(initialPizzas);
-      setOrders([]);
-      setLoading(false);
-    }
+    loadPizzeriaData();
+    loadPizzas();
+    loadOrders();
   }, []);
 
   const loadPizzeriaData = async () => {
     try {
-      if (!isSupabaseConfigured) {
-        setPizzeriaInfo({ ...initialPizzeriaInfo, id: 'local-pizzeria' });
-        setLoading(false);
-        return;
-      }
-
-      const result = await supabase
+      const { data, error } = await supabase
         .from('pizzerias')
         .select('*')
         .limit(1)
         .single();
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      if (result.data) {
+      if (data) {
         setPizzeriaInfo({
-          id: result.data.id,
-          name: result.data.name,
-          subtitle: result.data.subtitle,
-          logo: result.data.logo || '',
-          address: result.data.address,
-          phone: result.data.phone
+          id: data.id,
+          name: data.name,
+          subtitle: data.subtitle,
+          logo: data.logo || '',
+          address: data.address,
+          phone: data.phone
         });
       }
     } catch (error) {
@@ -71,7 +56,7 @@ export const useSupabasePizzaStore = () => {
       setPizzeriaInfo({ ...initialPizzeriaInfo, id: 'local-pizzeria' });
       toast({
         title: "Modo Local",
-        description: "Usando dados locais. Configure o Supabase para persistência.",
+        description: "Usando dados locais. Verifique a conexão com o banco.",
       });
     } finally {
       setLoading(false);
@@ -80,72 +65,64 @@ export const useSupabasePizzaStore = () => {
 
   const loadPizzas = async () => {
     try {
-      if (!isSupabaseConfigured) {
-        setPizzas(initialPizzas);
-        return;
-      }
-
-      const result = await supabase
+      const { data, error } = await supabase
         .from('pizzas')
         .select('*')
+        .eq('is_active', true)
         .order('created_at', { ascending: true });
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      if (result.data) {
-        const formattedPizzas: Pizza[] = result.data.map(pizza => ({
-          id: parseInt(pizza.id.split('-')[0], 16), // Convert UUID to number for compatibility
+      if (data) {
+        const formattedPizzas: Pizza[] = data.map((pizza, index) => ({
+          id: index + 1, // Legacy ID for compatibility
           name: pizza.name,
           description: pizza.description,
           image: pizza.image,
           prices: {
-            small: pizza.price_small,
-            medium: pizza.price_medium,
-            large: pizza.price_large
+            small: Number(pizza.price_small),
+            medium: Number(pizza.price_medium),
+            large: Number(pizza.price_large)
           },
-          availableIngredients: pizza.available_ingredients || []
+          availableIngredients: Array.isArray(pizza.available_ingredients) 
+            ? pizza.available_ingredients 
+            : []
         }));
         setPizzas(formattedPizzas);
       }
     } catch (error) {
       console.error('Error loading pizzas:', error);
-      // Fallback to local data
       setPizzas(initialPizzas);
     }
   };
 
   const loadOrders = async () => {
     try {
-      if (!isSupabaseConfigured) {
-        setOrders([]);
-        return;
-      }
-
-      const result = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      if (result.data) {
-        const formattedOrders: Order[] = result.data.map(order => ({
+      if (data) {
+        const formattedOrders: Order[] = data.map(order => ({
           id: order.order_number,
-          items: order.items,
+          items: Array.isArray(order.items) ? order.items : [],
           customerInfo: {
             name: order.customer_name,
             address: order.customer_address,
             phone: order.customer_phone
           },
           paymentMethod: order.payment_method,
-          total: order.total,
+          total: Number(order.total),
           timestamp: new Date(order.created_at),
           status: order.status as Order['status']
         }));
         setOrders(formattedOrders);
         
         // Update order counter based on existing orders
-        const maxOrderNumber = Math.max(...result.data.map(o => parseInt(o.order_number) || 0), 0);
+        const maxOrderNumber = Math.max(...data.map(o => parseInt(o.order_number) || 0), 0);
         setOrderCounter(maxOrderNumber + 1);
       }
     } catch (error) {
@@ -156,21 +133,10 @@ export const useSupabasePizzaStore = () => {
 
   // Pizza management
   const addPizza = async (pizza: Omit<Pizza, 'id'>) => {
-    if (!isSupabaseConfigured) {
-      // Local mode - add to state
-      const newPizza = { ...pizza, id: Date.now() };
-      setPizzas(prev => [...prev, newPizza]);
-      toast({
-        title: "Sucesso",
-        description: "Pizza adicionada localmente!",
-      });
-      return;
-    }
-
     if (!pizzeriaInfo) return;
 
     try {
-      const result = await supabase
+      const { error } = await supabase
         .from('pizzas')
         .insert({
           pizzeria_id: pizzeriaInfo.id,
@@ -181,13 +147,11 @@ export const useSupabasePizzaStore = () => {
           price_medium: pizza.prices.medium,
           price_large: pizza.prices.large,
           available_ingredients: pizza.availableIngredients || []
-        })
-        .select()
-        .single();
+        });
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      await loadPizzas(); // Reload pizzas
+      await loadPizzas();
       toast({
         title: "Sucesso",
         description: "Pizza adicionada com sucesso!",
@@ -203,30 +167,27 @@ export const useSupabasePizzaStore = () => {
   };
 
   const updatePizza = async (id: number, pizza: Omit<Pizza, 'id'>) => {
-    if (!isSupabaseConfigured) {
-      // Local mode - update state
-      setPizzas(prev => prev.map(p => p.id === id ? { ...pizza, id } : p));
-      toast({
-        title: "Sucesso",
-        description: "Pizza atualizada localmente!",
-      });
-      return;
-    }
-
     try {
-      // Find the pizza by the legacy ID
-      const existingPizza = pizzas.find(p => p.id === id);
-      if (!existingPizza) return;
-
-      const pizzaResult = await supabase
+      // Find the pizza by the legacy ID (index-based)
+      const { data: allPizzas, error: fetchError } = await supabase
         .from('pizzas')
-        .select('id')
-        .eq('name', existingPizza.name)
-        .single();
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
 
-      if (!pizzaResult.data) return;
+      if (fetchError) throw fetchError;
 
-      const result = await supabase
+      const targetPizza = allPizzas?.[id - 1]; // Convert legacy ID to array index
+      if (!targetPizza) {
+        toast({
+          title: "Erro",
+          description: "Pizza não encontrada",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
         .from('pizzas')
         .update({
           name: pizza.name,
@@ -235,14 +196,13 @@ export const useSupabasePizzaStore = () => {
           price_small: pizza.prices.small,
           price_medium: pizza.prices.medium,
           price_large: pizza.prices.large,
-          available_ingredients: pizza.availableIngredients || [],
-          updated_at: new Date().toISOString()
+          available_ingredients: pizza.availableIngredients || []
         })
-        .eq('id', pizzaResult.data.id);
+        .eq('id', targetPizza.id);
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      await loadPizzas(); // Reload pizzas
+      await loadPizzas();
       toast({
         title: "Sucesso",
         description: "Pizza atualizada com sucesso!",
@@ -258,37 +218,34 @@ export const useSupabasePizzaStore = () => {
   };
 
   const deletePizza = async (id: number) => {
-    if (!isSupabaseConfigured) {
-      // Local mode - remove from state
-      setPizzas(prev => prev.filter(p => p.id !== id));
-      toast({
-        title: "Sucesso",
-        description: "Pizza removida localmente!",
-      });
-      return;
-    }
-
     try {
-      // Find the pizza by the legacy ID
-      const existingPizza = pizzas.find(p => p.id === id);
-      if (!existingPizza) return;
-
-      const pizzaResult = await supabase
+      // Find the pizza by the legacy ID (index-based)
+      const { data: allPizzas, error: fetchError } = await supabase
         .from('pizzas')
-        .select('id')
-        .eq('name', existingPizza.name)
-        .single();
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
 
-      if (!pizzaResult.data) return;
+      if (fetchError) throw fetchError;
 
-      const result = await supabase
+      const targetPizza = allPizzas?.[id - 1]; // Convert legacy ID to array index
+      if (!targetPizza) {
+        toast({
+          title: "Erro",
+          description: "Pizza não encontrada",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
         .from('pizzas')
-        .delete()
-        .eq('id', pizzaResult.data.id);
+        .update({ is_active: false })
+        .eq('id', targetPizza.id);
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      await loadPizzas(); // Reload pizzas
+      await loadPizzas();
       toast({
         title: "Sucesso",
         description: "Pizza removida com sucesso!",
@@ -383,47 +340,10 @@ export const useSupabasePizzaStore = () => {
     const orderId = orderCounter.toString();
     const total = getCartTotal();
 
-    if (!isSupabaseConfigured) {
-      // Local mode - add to state
-      const newOrder: Order = {
-        id: orderId,
-        items: [...cart],
-        customerInfo,
-        paymentMethod,
-        total,
-        timestamp: new Date(),
-        status: 'pending'
-      };
-      setOrders(prev => [newOrder, ...prev]);
-      setOrderCounter(orderCounter + 1);
-      clearCart();
-      
-      // Send to WhatsApp
-      if (pizzeriaInfo) {
-        const items = cart.map(item => 
-          `• ${item.name} (${getSizeLabel(item.size)}) - Qtd: ${item.quantity} - R$ ${(item.price * item.quantity).toFixed(2)}`
-        ).join('\n');
-
-        const message = `🍕 *NOVO PEDIDO - ${pizzeriaInfo.name}*\n\n` +
-          `📋 *Pedido:* #${orderId}\n` +
-          `👤 *Cliente:* ${customerInfo.name}\n` +
-          `📍 *Endereço:* ${customerInfo.address}\n` +
-          `📞 *Telefone:* ${customerInfo.phone}\n` +
-          `💳 *Pagamento:* ${paymentMethod}\n\n` +
-          `🍕 *Itens:*\n${items}\n\n` +
-          `💰 *Total:* R$ ${total.toFixed(2)}`;
-
-        const whatsappUrl = `https://wa.me/${pizzeriaInfo.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
-      }
-      
-      return orderId;
-    }
-
     if (!pizzeriaInfo) return '';
 
     try {
-      const result = await supabase
+      const { error } = await supabase
         .from('orders')
         .insert({
           pizzeria_id: pizzeriaInfo.id,
@@ -437,11 +357,11 @@ export const useSupabasePizzaStore = () => {
           items: cart
         });
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
       setOrderCounter(orderCounter + 1);
       clearCart();
-      await loadOrders(); // Reload orders
+      await loadOrders();
 
       // Send to WhatsApp
       const items = cart.map(item => 
@@ -473,30 +393,15 @@ export const useSupabasePizzaStore = () => {
   };
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
-    if (!isSupabaseConfigured) {
-      // Local mode - update state
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status } : order
-      ));
-      toast({
-        title: "Sucesso",
-        description: "Status do pedido atualizado localmente!",
-      });
-      return;
-    }
-
     try {
-      const result = await supabase
+      const { error } = await supabase
         .from('orders')
-        .update({ 
-          status: status,
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: status })
         .eq('order_number', orderId);
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      await loadOrders(); // Reload orders
+      await loadOrders();
       toast({
         title: "Sucesso",
         description: "Status do pedido atualizado!",
@@ -513,32 +418,21 @@ export const useSupabasePizzaStore = () => {
 
   // Pizzeria settings
   const updatePizzeriaInfo = async (info: Omit<PizzeriaInfo, 'id'>) => {
-    if (!isSupabaseConfigured) {
-      // Local mode - update state
-      setPizzeriaInfo(prev => prev ? { ...prev, ...info } : null);
-      toast({
-        title: "Sucesso",
-        description: "Informações atualizadas localmente!",
-      });
-      return;
-    }
-
     if (!pizzeriaInfo) return;
 
     try {
-      const result = await supabase
+      const { error } = await supabase
         .from('pizzerias')
         .update({
           name: info.name,
           subtitle: info.subtitle,
           logo: info.logo,
           address: info.address,
-          phone: info.phone,
-          updated_at: new Date().toISOString()
+          phone: info.phone
         })
         .eq('id', pizzeriaInfo.id);
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
       setPizzeriaInfo({ ...pizzeriaInfo, ...info });
       toast({
@@ -557,25 +451,18 @@ export const useSupabasePizzaStore = () => {
 
   // Authentication
   const authenticate = async (password: string): Promise<boolean> => {
-    if (!isSupabaseConfigured) {
-      // Local mode - simple password check
-      const isValid = password === "gcipione";
-      setIsAuthenticated(isValid);
-      return isValid;
-    }
-
     if (!pizzeriaInfo) return false;
 
     try {
-      const result = await supabase
+      const { data, error } = await supabase
         .from('pizzerias')
         .select('admin_password')
         .eq('id', pizzeriaInfo.id)
         .single();
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      const isValid = result.data.admin_password === password;
+      const isValid = data.admin_password === password;
       setIsAuthenticated(isValid);
       return isValid;
     } catch (error) {
@@ -592,23 +479,18 @@ export const useSupabasePizzaStore = () => {
       return null;
     }
 
-    if (!isSupabaseConfigured) {
-      // Local mode - return default password
-      return "gcipione";
-    }
-
     if (!pizzeriaInfo) return null;
 
     try {
-      const result = await supabase
+      const { data, error } = await supabase
         .from('pizzerias')
         .select('admin_password')
         .eq('id', pizzeriaInfo.id)
         .single();
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
-      return result.data.admin_password;
+      return data.admin_password;
     } catch (error) {
       console.error('Error recovering password:', error);
       return null;
