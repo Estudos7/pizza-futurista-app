@@ -105,6 +105,16 @@ export default {
 						transform: 'translateY(0)'
 					}
 				},
+				'scale-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'scale(0.9) translateY(-10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'scale(1) translateY(0)'
+					}
+				},
 				'glow': {
 					'0%, 100%': {
 						textShadow: '0 0 5px currentColor, 0 0 10px currentColor'
@@ -119,6 +129,7 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.6s ease-out',
 				'slide-up': 'slide-up 0.4s ease-out',
+				'scale-in': 'scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
 				'glow': 'glow 2s infinite'
 			}
 		}

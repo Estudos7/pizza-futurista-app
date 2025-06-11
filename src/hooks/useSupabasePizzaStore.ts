@@ -85,7 +85,7 @@ export const useSupabasePizzaStore = () => {
             large: Number(pizza.price_large)
           },
           availableIngredients: Array.isArray(pizza.available_ingredients) 
-            ? pizza.available_ingredients 
+            ? pizza.available_ingredients.filter((item): item is string => typeof item === 'string')
             : []
         }));
         setPizzas(formattedPizzas);
@@ -108,7 +108,17 @@ export const useSupabasePizzaStore = () => {
       if (data) {
         const formattedOrders: Order[] = data.map(order => ({
           id: order.order_number,
-          items: Array.isArray(order.items) ? order.items : [],
+          items: Array.isArray(order.items) 
+            ? order.items.filter((item): item is CartItem => 
+                typeof item === 'object' && 
+                item !== null && 
+                'pizzaId' in item &&
+                'name' in item &&
+                'size' in item &&
+                'price' in item &&
+                'quantity' in item
+              )
+            : [],
           customerInfo: {
             name: order.customer_name,
             address: order.customer_address,
@@ -354,7 +364,7 @@ export const useSupabasePizzaStore = () => {
           payment_method: paymentMethod,
           total: total,
           status: 'pending',
-          items: cart
+          items: cart as any // Cast to any to match Json type
         });
 
       if (error) throw error;
