@@ -2,6 +2,12 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface PizzaManagementProps {
   store: any;
@@ -9,14 +15,13 @@ interface PizzaManagementProps {
 
 const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
   const { toast } = useToast();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPizza, setEditingPizza] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     image: '',
     priceSmall: '',
-    priceMedium: '',
     priceLarge: ''
   });
 
@@ -26,11 +31,10 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
       description: '',
       image: '',
       priceSmall: '',
-      priceMedium: '',
       priceLarge: ''
     });
     setEditingPizza(null);
-    setIsFormOpen(false);
+    setIsDialogOpen(false);
   };
 
   const handleEdit = (pizza: any) => {
@@ -39,11 +43,22 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
       description: pizza.description,
       image: pizza.image,
       priceSmall: pizza.prices.small.toString(),
-      priceMedium: pizza.prices.medium.toString(),
       priceLarge: pizza.prices.large.toString()
     });
     setEditingPizza(pizza);
-    setIsFormOpen(true);
+    setIsDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    setFormData({
+      name: '',
+      description: '',
+      image: '',
+      priceSmall: '',
+      priceLarge: ''
+    });
+    setEditingPizza(null);
+    setIsDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -55,7 +70,7 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
       image: formData.image,
       prices: {
         small: parseFloat(formData.priceSmall),
-        medium: parseFloat(formData.priceMedium),
+        medium: parseFloat(formData.priceSmall) * 1.4, // Auto-calculate medium price
         large: parseFloat(formData.priceLarge)
       }
     };
@@ -92,7 +107,7 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
       <div className="flex justify-between items-center">
         <h2 className="font-montserrat text-2xl font-bold text-white">Gerenciar Pizzas</h2>
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={handleAdd}
           className="flex items-center space-x-2 gradient-primary px-4 py-2 rounded-lg text-white font-semibold hover:shadow-lg transition-all"
         >
           <Plus className="w-5 h-5" />
@@ -100,13 +115,15 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
         </button>
       </div>
 
-      {isFormOpen && (
-        <div className="glass-card p-6 rounded-xl">
-          <h3 className="font-montserrat text-xl font-bold text-white mb-4">
-            {editingPizza ? 'Editar Pizza' : 'Nova Pizza'}
-          </h3>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="glass-card border-white/20 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-montserrat text-xl font-bold text-white">
+              {editingPizza ? 'Editar Pizza' : 'Nova Pizza'}
+            </DialogTitle>
+          </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-white font-medium mb-2">Nome</label>
               <input
@@ -152,18 +169,6 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
             </div>
 
             <div>
-              <label className="block text-white font-medium mb-2">Preço Média (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                value={formData.priceMedium}
-                onChange={(e) => setFormData({ ...formData, priceMedium: e.target.value })}
-                className="w-full p-3 rounded-lg glass text-white border border-white/20 focus:border-neon-cyan focus:outline-none"
-              />
-            </div>
-
-            <div>
               <label className="block text-white font-medium mb-2">Preço Grande (R$)</label>
               <input
                 type="number"
@@ -175,7 +180,7 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
               />
             </div>
 
-            <div className="md:col-span-2 flex space-x-4">
+            <div className="md:col-span-2 flex space-x-4 pt-4">
               <button
                 type="submit"
                 className="gradient-primary px-6 py-3 rounded-lg text-white font-semibold hover:shadow-lg transition-all"
@@ -191,8 +196,8 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
               </button>
             </div>
           </form>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {store.pizzas.map((pizza: any) => (
@@ -208,7 +213,6 @@ const PizzaManagement: React.FC<PizzaManagementProps> = ({ store }) => {
               
               <div className="text-sm text-neon-cyan mb-4">
                 <p>Broto: R$ {pizza.prices.small.toFixed(2)}</p>
-                <p>Média: R$ {pizza.prices.medium.toFixed(2)}</p>
                 <p>Grande: R$ {pizza.prices.large.toFixed(2)}</p>
               </div>
               
