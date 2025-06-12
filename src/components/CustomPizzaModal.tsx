@@ -54,10 +54,10 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
   };
 
   const getSelectedPizzaNames = () => {
-    const orderLabels = ['Primeira', 'Segunda', 'Terceira', 'Quarta'];
+    const orderLabels = ['1ª', '2ª', '3ª', '4ª'];
     return selectedPizzas.map((id, index) => {
       const pizza = pizzas.find(p => p.id === id);
-      return pizza ? `${orderLabels[index]}: ${pizza.name}` : '';
+      return pizza ? `${orderLabels[index]} ${pizza.name}` : '';
     }).filter(name => name);
   };
 
@@ -137,10 +137,13 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
 
             {selectedPizzas.length > 0 && (
               <div className="glass p-4 rounded-lg">
-                <h4 className="font-semibold text-white mb-2">Pizzas selecionadas:</h4>
-                <div className="text-neon-cyan text-sm">
+                <h4 className="font-semibold text-white mb-3">🍕 Sua Pizza Montada:</h4>
+                <div className="text-neon-cyan text-sm space-y-1">
                   {getSelectedPizzaNames().map((pizzaName, index) => (
-                    <div key={index}>{pizzaName}</div>
+                    <div key={index} className="flex items-center">
+                      <span className="w-2 h-2 bg-neon-cyan rounded-full mr-2"></span>
+                      {pizzaName}
+                    </div>
                   ))}
                 </div>
               </div>

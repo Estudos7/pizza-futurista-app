@@ -303,13 +303,13 @@ export const useSupabasePizzaStore = () => {
       });
       price = Math.max(...selectedPizzaPrices);
       
-      const orderLabels = ['Primeira', 'Segunda', 'Terceira', 'Quarta'];
+      const orderLabels = ['1ª', '2ª', '3ª', '4ª'];
       const selectedPizzaNames = customPizzas.map((id, index) => {
         const p = pizzas.find(pizza => pizza.id === id);
-        return p ? `${orderLabels[index]}: ${p.name}` : '';
+        return p ? `${orderLabels[index]} ${p.name}` : '';
       }).filter(name => name);
       
-      pizzaName = `Pizza Montada pelo Cliente (${selectedPizzaNames.join(', ')})`;
+      pizzaName = `🍕 Pizza Montada\n${selectedPizzaNames.join(' • ')}`;
     }
 
     const isCustom = customPizzas && customPizzas.length > 0;
