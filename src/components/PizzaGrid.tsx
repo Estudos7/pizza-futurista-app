@@ -50,7 +50,7 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 p-3 md:p-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 p-3 md:p-6 pb-24">
         {pizzas.map((pizza) => (
           <div 
             key={pizza.id} 
@@ -106,11 +106,12 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
                   ))}
                 </div>
                 
-                <div className="space-y-1 md:space-y-2">
-                  {/* Botão Adicionar com ícone arredondado pulsante */}
+                {/* Botões lado a lado */}
+                <div className="flex gap-2">
+                  {/* Botão Adicionar com ícone arredondado */}
                   <button
                     onClick={() => handleAddToCart(pizza.id)}
-                    className="w-full gradient-primary py-2 md:py-3 px-3 md:px-4 rounded-full text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105 text-xs md:text-sm flex items-center justify-center gap-2 animate-pulse hover:animate-none"
+                    className="flex-1 gradient-primary py-2 md:py-3 px-3 md:px-4 rounded-full text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105 text-xs md:text-sm flex items-center justify-center"
                   >
                     <div className="bg-white/20 p-1 rounded-full">
                       <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
@@ -120,7 +121,7 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
                   {/* Botão Montar Pizza com ícone arredondado pulsante */}
                   <button
                     onClick={handleCustomPizza}
-                    className="w-full glass py-1.5 md:py-2 px-3 md:px-4 rounded-full text-white font-medium hover:bg-white/20 transition-all duration-300 text-xs md:text-sm flex items-center justify-center gap-2 animate-pulse hover:animate-none"
+                    className="flex-1 glass py-2 md:py-3 px-3 md:px-4 rounded-full text-white font-medium hover:bg-white/20 transition-all duration-300 text-xs md:text-sm flex items-center justify-center animate-pulse hover:animate-none"
                   >
                     <div className="bg-white/20 p-1 rounded-full">
                       <KeyRound className="w-3 h-3 md:w-4 md:h-4" />

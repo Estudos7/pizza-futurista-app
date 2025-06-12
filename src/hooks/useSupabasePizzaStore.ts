@@ -378,7 +378,15 @@ export const useSupabasePizzaStore = () => {
           payment_method: paymentMethod,
           total: total,
           status: 'pending',
-          items: cart as any // Cast to any to match Json type
+          items: cart.map(item => ({
+            pizzaId: item.pizzaId,
+            name: item.name,
+            size: item.size,
+            price: item.price,
+            quantity: item.quantity,
+            customPizzas: item.customPizzas || [],
+            isCustom: item.isCustom || false
+          }))
         });
 
       if (error) throw error;
