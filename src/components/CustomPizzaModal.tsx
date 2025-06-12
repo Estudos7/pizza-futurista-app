@@ -37,9 +37,16 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
     }
   };
 
+  // Calcular o preço baseado na pizza mais cara selecionada
   const getCurrentPrice = () => {
-    const maxPrice = Math.max(...pizzas.map(p => p.prices[size]));
-    return maxPrice;
+    if (selectedPizzas.length === 0) return 0;
+    
+    const selectedPizzaPrices = selectedPizzas.map(id => {
+      const pizza = pizzas.find(p => p.id === id);
+      return pizza ? pizza.prices[size] : 0;
+    });
+    
+    return Math.max(...selectedPizzaPrices);
   };
 
   const getSelectedPizzaNames = () => {
@@ -71,8 +78,15 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
               <div className="glass p-4 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="text-white font-medium">Pizza Grande</span>
-                  <span className="text-neon-cyan font-bold text-lg">R$ {getCurrentPrice().toFixed(2)}</span>
+                  <span className="text-neon-cyan font-bold text-lg">
+                    R$ {getCurrentPrice().toFixed(2)}
+                  </span>
                 </div>
+                {selectedPizzas.length > 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    * Preço baseado na pizza mais cara selecionada
+                  </div>
+                )}
               </div>
             </div>
 
@@ -102,6 +116,9 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
                       <h5 className="font-medium text-white text-sm text-center">
                         {pizza.name}
                       </h5>
+                      <div className="text-xs text-neon-cyan text-center mt-1">
+                        R$ {pizza.prices[size].toFixed(2)}
+                      </div>
                     </div>
                   </div>
                 ))}

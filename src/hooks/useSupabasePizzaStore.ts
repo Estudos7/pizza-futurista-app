@@ -106,10 +106,12 @@ export const useSupabasePizzaStore = () => {
       if (error) throw error;
 
       if (data) {
-        const formattedOrders: Order[] = data.map(order => ({
-          id: order.order_number,
-          items: Array.isArray(order.items) 
-            ? order.items.filter((item): item is CartItem => 
+        const formattedOrders: Order[] = data.map(order => {
+          // Type guard to ensure items are CartItem[]
+          const items: CartItem[] = [];
+          if (Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              if (
                 typeof item === 'object' && 
                 item !== null && 
                 'pizzaId' in item &&
@@ -117,18 +119,26 @@ export const useSupabasePizzaStore = () => {
                 'size' in item &&
                 'price' in item &&
                 'quantity' in item
-              )
-            : [],
-          customerInfo: {
-            name: order.customer_name,
-            address: order.customer_address,
-            phone: order.customer_phone
-          },
-          paymentMethod: order.payment_method,
-          total: Number(order.total),
-          timestamp: new Date(order.created_at),
-          status: order.status as Order['status']
-        }));
+              ) {
+                items.push(item as CartItem);
+              }
+            });
+          }
+
+          return {
+            id: order.order_number,
+            items,
+            customerInfo: {
+              name: order.customer_name,
+              address: order.customer_address,
+              phone: order.customer_phone
+            },
+            paymentMethod: order.payment_method,
+            total: Number(order.total),
+            timestamp: new Date(order.created_at),
+            status: order.status as Order['status']
+          };
+        });
         setOrders(formattedOrders);
         
         // Update order counter based on existing orders
@@ -279,8 +289,12 @@ export const useSupabasePizzaStore = () => {
     let pizzaName = pizza.name;
     
     if (customPizzas && customPizzas.length > 0) {
-      const maxPrice = Math.max(...pizzas.map(p => p.prices[size]));
-      price = maxPrice;
+      // Calculate the highest price among selected pizzas for the given size
+      const selectedPizzaPrices = customPizzas.map(id => {
+        const p = pizzas.find(pizza => pizza.id === id);
+        return p ? p.prices[size] : 0;
+      });
+      price = Math.max(...selectedPizzaPrices);
       
       const selectedPizzaNames = customPizzas.map(id => {
         const p = pizzas.find(pizza => pizza.id === id);
