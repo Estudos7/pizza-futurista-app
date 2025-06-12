@@ -120,7 +120,15 @@ export const useSupabasePizzaStore = () => {
                 'price' in item &&
                 'quantity' in item
               ) {
-                items.push(item as CartItem);
+                items.push({
+                  pizzaId: Number(item.pizzaId),
+                  name: String(item.name),
+                  size: String(item.size) as 'small' | 'medium' | 'large',
+                  price: Number(item.price),
+                  quantity: Number(item.quantity),
+                  customPizzas: Array.isArray(item.customPizzas) ? item.customPizzas.map(Number) : [],
+                  isCustom: Boolean(item.isCustom)
+                });
               }
             });
           }
@@ -289,19 +297,19 @@ export const useSupabasePizzaStore = () => {
     let pizzaName = pizza.name;
     
     if (customPizzas && customPizzas.length > 0) {
-      // Calculate the highest price among selected pizzas for the given size
       const selectedPizzaPrices = customPizzas.map(id => {
         const p = pizzas.find(pizza => pizza.id === id);
         return p ? p.prices[size] : 0;
       });
       price = Math.max(...selectedPizzaPrices);
       
-      const selectedPizzaNames = customPizzas.map(id => {
+      const orderLabels = ['Primeira', 'Segunda', 'Terceira', 'Quarta'];
+      const selectedPizzaNames = customPizzas.map((id, index) => {
         const p = pizzas.find(pizza => pizza.id === id);
-        return p?.name || '';
+        return p ? `${orderLabels[index]}: ${p.name}` : '';
       }).filter(name => name);
       
-      pizzaName = `Pizza Personalizada (${selectedPizzaNames.join(', ')})`;
+      pizzaName = `Pizza Montada pelo Cliente (${selectedPizzaNames.join(', ')})`;
     }
 
     const isCustom = customPizzas && customPizzas.length > 0;

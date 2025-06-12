@@ -17,7 +17,7 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
   onAddToCart
 }) => {
   const [selectedPizzas, setSelectedPizzas] = useState<number[]>([]);
-  const size = 'large'; // Sempre tamanho grande
+  const size = 'large';
 
   if (!isOpen) return null;
 
@@ -30,6 +30,11 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
   };
 
   const handleAddToCart = () => {
+    if (selectedPizzas.length < 2) {
+      alert('É necessário selecionar no mínimo 2 pizzas para montar uma pizza personalizada!');
+      return;
+    }
+    
     if (selectedPizzas.length > 0) {
       onAddToCart(selectedPizzas, size);
       setSelectedPizzas([]);
@@ -37,7 +42,6 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
     }
   };
 
-  // Calcular o preço baseado na pizza mais cara selecionada
   const getCurrentPrice = () => {
     if (selectedPizzas.length === 0) return 0;
     
@@ -50,9 +54,10 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
   };
 
   const getSelectedPizzaNames = () => {
-    return selectedPizzas.map(id => {
+    const orderLabels = ['Primeira', 'Segunda', 'Terceira', 'Quarta'];
+    return selectedPizzas.map((id, index) => {
       const pizza = pizzas.find(p => p.id === id);
-      return pizza?.name || '';
+      return pizza ? `${orderLabels[index]}: ${pizza.name}` : '';
     }).filter(name => name);
   };
 
@@ -92,8 +97,13 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
 
             <div>
               <h4 className="font-semibold text-white mb-3">
-                Escolha as pizzas ({selectedPizzas.length}/4):
+                Escolha as pizzas ({selectedPizzas.length}/4) - Mínimo: 2 pizzas
               </h4>
+              {selectedPizzas.length < 2 && (
+                <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-200 p-3 rounded-lg mb-4 text-sm">
+                  ⚠️ Selecione pelo menos 2 pizzas para montar sua pizza personalizada
+                </div>
+              )}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {pizzas.map((pizza) => (
                   <div
@@ -128,9 +138,11 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
             {selectedPizzas.length > 0 && (
               <div className="glass p-4 rounded-lg">
                 <h4 className="font-semibold text-white mb-2">Pizzas selecionadas:</h4>
-                <p className="text-neon-cyan text-sm">
-                  {getSelectedPizzaNames().join(', ')}
-                </p>
+                <div className="text-neon-cyan text-sm">
+                  {getSelectedPizzaNames().map((pizzaName, index) => (
+                    <div key={index}>{pizzaName}</div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -143,10 +155,13 @@ const CustomPizzaModal: React.FC<CustomPizzaModalProps> = ({
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={selectedPizzas.length === 0}
+                disabled={selectedPizzas.length < 2}
                 className="w-full gradient-primary py-3 px-4 rounded-lg text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Adicionar ao Carrinho
+                {selectedPizzas.length < 2 
+                  ? 'Selecione pelo menos 2 pizzas' 
+                  : 'Adicionar ao Carrinho'
+                }
               </button>
             </div>
           </div>

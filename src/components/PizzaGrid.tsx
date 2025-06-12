@@ -50,7 +50,7 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
 
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 p-3 md:p-6 pb-24">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 p-3 md:p-6 pb-32">
         {pizzas.map((pizza) => (
           <div 
             key={pizza.id} 
@@ -64,7 +64,6 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
               
-              {/* Ícone de descrição piscando */}
               <button
                 onClick={() => handleViewDescription(pizza)}
                 className="absolute top-2 right-2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-all duration-300 animate-pulse hover:animate-none"
@@ -77,7 +76,6 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
               <h3 className="font-montserrat text-sm md:text-lg font-bold text-white mb-2 md:mb-3 line-clamp-2 text-center">{pizza.name}</h3>
               
               <div className="space-y-2 md:space-y-3">
-                {/* Preços */}
                 <div className="flex justify-between items-center text-center">
                   <div className="flex-1">
                     <div className="text-xs text-muted-foreground">Broto</div>
@@ -89,7 +87,6 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
                   </div>
                 </div>
 
-                {/* Seleção de tamanho */}
                 <div className="flex gap-1 md:gap-2">
                   {(['small', 'large'] as const).map((size) => (
                     <button
@@ -106,9 +103,7 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
                   ))}
                 </div>
                 
-                {/* Botões lado a lado */}
                 <div className="flex gap-2">
-                  {/* Botão Adicionar com ícone arredondado */}
                   <button
                     onClick={() => handleAddToCart(pizza.id)}
                     className="flex-1 gradient-primary py-2 md:py-3 px-3 md:px-4 rounded-full text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105 text-xs md:text-sm flex items-center justify-center"
@@ -118,7 +113,6 @@ const PizzaGrid: React.FC<PizzaGridProps> = ({ pizzas, onAddToCart }) => {
                     </div>
                   </button>
                   
-                  {/* Botão Montar Pizza com ícone arredondado pulsante */}
                   <button
                     onClick={handleCustomPizza}
                     className="flex-1 glass py-2 md:py-3 px-3 md:px-4 rounded-full text-white font-medium hover:bg-white/20 transition-all duration-300 text-xs md:text-sm flex items-center justify-center animate-pulse hover:animate-none"
